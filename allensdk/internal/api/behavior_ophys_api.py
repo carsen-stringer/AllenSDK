@@ -113,6 +113,7 @@ class BehaviorOphysLimsApi(OphysLimsApi, BehaviorOphysApiBase):
         dff_traces = self.get_raw_dff_data()
         cell_roi_id_list = self.get_cell_roi_ids()
         df = pd.DataFrame({'dff': [x for x in dff_traces]}, index=pd.Index(cell_roi_id_list, name='cell_roi_id'))
+        df['timestamps'] = [self.get_ophys_timestamps()]*len(df)
 
         cell_specimen_table = self.get_cell_specimen_table()
         df = cell_specimen_table[['cell_roi_id']].join(df, on='cell_roi_id')
@@ -197,9 +198,11 @@ class BehaviorOphysLimsApi(OphysLimsApi, BehaviorOphysApiBase):
         ophys_timestamps = self.get_ophys_timestamps()
         assert corrected_fluorescence_trace_array.shape[1], ophys_timestamps.shape[0]
         df = pd.DataFrame({'corrected_fluorescence': list(corrected_fluorescence_trace_array)}, index=pd.Index(cell_roi_id_list, name='cell_roi_id'))
+        df['timestamps'] = [self.get_ophys_timestamps()]*len(df)
 
         cell_specimen_table = self.get_cell_specimen_table()
         df = cell_specimen_table[['cell_roi_id']].join(df, on='cell_roi_id')
+
         return df
 
     @memoize

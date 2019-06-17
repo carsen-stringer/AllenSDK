@@ -3,12 +3,16 @@ import pandas as pd
 import math
 from typing import NamedTuple
 import os
+import time
 
 from allensdk.core.lazy_property import LazyProperty, LazyPropertyMixin
 from allensdk.internal.api.behavior_ophys_api import BehaviorOphysLimsApi
 from allensdk.brain_observatory.behavior.behavior_ophys_api.behavior_ophys_nwb_api import equals
 from allensdk.deprecated import legacy
 from allensdk.brain_observatory.behavior.trials_processing import calculate_reward_rate, dprime
+from query import HasTimestamps, StartTime, StopTime, Equals, IsRunningSpeed, Or, CellRoiId, TimestampInterval, And, StackedIntervals, IsDff, BaseSpecification, ValueRange
+
+
 
 
 class BehaviorOphysSession(LazyPropertyMixin):
@@ -161,16 +165,45 @@ class BehaviorOphysSession(LazyPropertyMixin):
         performance_metrics['mean_false_alarm_rate_engaged'] = rolling_performance_df['false_alarm_rate'][engaged_trial_mask].mean()
         performance_metrics['mean_dprime'] = rolling_performance_df['dprime'].mean()
         performance_metrics['mean_dprime_engaged'] = rolling_performance_df['dprime'][engaged_trial_mask].mean()
-
-
         
-
-        for key, val in performance_metrics.items():
-            print(key, val)
-
 
 if __name__ == "__main__":
 
-    ophys_experiment_id = 789359614
+    ophys_experiment_id = 792813858
     session = BehaviorOphysSession.from_lims(ophys_experiment_id)
-    session.get_performance_metrics()
+
+    # start_times = session.query(Equals(True, 'miss'))['start_time'].values
+    # df = session.query(IsDff() & StackedIntervals(start_times + .1, start_times + .250), index='cell_roi_id')
+    # print(df['dff'].map(lambda x: np.nanmean(x)).mean())
+
+    # start_times = session.query(Equals(True, 'hit'))['start_time'].values
+    # df = session.query(IsDff() & StackedIntervals(start_times + .1, start_times + .250), index='cell_roi_id')
+    # print(df['dff'].map(lambda x: np.nanmean(x)).mean())
+
+
+
+
+
+    # q = Different('initial_image_name', 'change_image_name')
+    # df = session.query(q, tables=['trials'])
+
+    # print(session.stimulus_presentations.head(50))
+
+    q1 = ValueRange('start_time', 307.83, 315.86) & ValueRange('stop_time', 307.83, 315.86)
+    q1 |= ValueRange('start_time', 316.09, 327.87) & ValueRange('stop_time', 316.09, 327.87)
+
+    df = (q1).query(session.stimulus_presentations)
+    print(df)
+
+    # print(session.trials[['initial_image_name', 'change_image_name']])
+
+
+
+    # import matplotlib.pyplot as plt
+
+    # fig, ax = plt.subplots(1,1)
+    # for x in df['dff'].map(lambda x: np.nanmean(x, axis=0)):
+    #     ax.plot(x)
+    # plt.show()
+    
+
